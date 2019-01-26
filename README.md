@@ -56,3 +56,4 @@ show_tree(tree_filename)
 
 Note: This notebook is ```notebook/Tree.ipynb``` in the his_profile git repo at ```git@github.ibm.com:zGollum/his_profile.git```; you will need to do install scipy into your environment.
 
+![tree](/images/Tree.jpg)
