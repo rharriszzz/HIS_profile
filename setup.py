@@ -93,7 +93,7 @@ def main():
         'maintainer':       "Rick Harris",
         'maintainer_email': "rharris@rocketsoftware.com",
 
-        'ext_modules': [Extension('_csv_info', [ "his_profile/_csv_info.c" ])],
+        'ext_modules': [Extension('his_profile._csv_info', [ "his_profile/_csv_info.c" ])],
         'packages': ['his_profile'],
 
         'license': 'Other',
