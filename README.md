@@ -35,10 +35,11 @@ from bokeh.io import output_notebook, show
 from bokeh.resources import Resources
 output_notebook()
 
-from his_plotting import show_tree
+from his_profile import show_tree
 
 with open('pyan_38_1_test.log', "wt") as log:
     tree_filename = run_test('scipy_odeint_grayscott1d_non-banded', pyan_38_1_test)
 show_tree(not_chunked_tree_filename)
 
+Note: This notebook is notebook/Tree.ipynb in the his_profile git repo at git@github.ibm.com:zGollum/his_profile.git
 

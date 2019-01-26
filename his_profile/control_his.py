@@ -8,8 +8,6 @@ from datetime import datetime
 import subprocess
 from subprocess import PIPE
 
-import _csv_info
-
 command_verbose = True
 CONSOLE_NAME="%sC" % os.getenv('USER')
 ISSUE_COMMAND='issue_command'

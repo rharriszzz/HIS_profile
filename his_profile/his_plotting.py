@@ -4,7 +4,7 @@ from numpy import pi
 from bokeh.colors import HSL
 from bokeh.plotting import *
 from bokeh.models import HoverTool
-from his_profile import tree_item_count
+from .his_profile import tree_item_count
 from math import fmod
 import pickle
 

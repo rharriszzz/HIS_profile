@@ -14,8 +14,8 @@ import ctypes
 from array import array
 import traceback
 
-from control_his import run_his_test, get_map_for_asids
-import _csv_info
+from .control_his import run_his_test, get_map_for_asids
+from ._csv_info import get_csv_info, get_module_info
 
 command_verbose = True
 CONSOLE_NAME="%sC" % os.getenv('USER')
@@ -99,7 +99,7 @@ def get_info_handler(signalnum, frame):
     with open(get_info_arguments_file, "rb") as argfile:
         names = pickle.load(argfile)
     entries = list()
-    _csv_info.get_csv_info(entries, get_current_asid())
+    get_csv_info(entries, get_current_asid())
     if names is not None:
         get_csv_info_entries = entries
         entries = list()
@@ -109,7 +109,7 @@ def get_info_handler(signalnum, frame):
             else:
                 end_address = address
             if name in names:
-                _csv_info.get_module_info(entries, asid, name, begin_address, end_address)
+                get_module_info(entries, asid, name, begin_address, end_address)
     get_info_results_file = "/tmp/get_info_results_%d.pkl" % pid
     with open(get_info_results_file, "wb") as resultsfile:
         pickle.dump(entries, resultsfile)
@@ -136,7 +136,7 @@ def get_csv_info_for_current_asid():
     saved_entries = entries
     entries = list()
     for asid in (0, current_asid):
-        _csv_info.get_csv_info(entries, asid)
+        get_csv_info(entries, asid)
     if False:
         show_entries("get_csv_info_for_current_asid")
     entries = saved_entries + entries
@@ -149,7 +149,7 @@ def get_module_info_for_current_asid():
     saved_entries = entries
     entries = list()
     for asid in (0, current_asid):
-        _csv_info.get_csv_info(entries, asid)
+        get_csv_info(entries, asid)
     get_csv_info_entries = entries
     entries = list()
     for asid, address, is_begin, level, name in get_csv_info_entries:
@@ -158,7 +158,7 @@ def get_module_info_for_current_asid():
         else:
             end_address = address
             if name in names_for_get_module_info:
-                _csv_info.get_module_info(entries, asid, name, begin_address, end_address)
+                get_module_info(entries, asid, name, begin_address, end_address)
     if False:
         show_entries("get_module_info_for_current_asid")
     entries = saved_entries + entries
@@ -350,9 +350,12 @@ def increment_count_for_asid_and_address(primary_asid, home_asid, address, incre
 def read_his_map(his_map_pathname):
     global entries, private24, private31, asid_to_name_map
     encoding = None
-    with open(his_map_pathname, "rt", encoding=encoding) as map_in:
-        if 'I' != map_in.read(1):
-            encoding = "cp1047_oe"
+    try:
+        with open(his_map_pathname, "rt", encoding=encoding) as map_in:
+            if 'I' != map_in.read(1):
+                encoding = "cp1047_oe"
+    except:
+        encoding = "cp1047_oe"
     line_number = 0
     last_asid = None
     ModuleName = None
