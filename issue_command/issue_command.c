@@ -10,11 +10,11 @@
 */
 
 /*
-c89 -c "-Wc,langlvl(extc99),gonum,goff,hgpr" -o issue_command.o ITOMSTC/src/issue_command.c
-c89 "-Wl,ac=1" -o ~/bin/issue_command issue_command.o 
-extattr +a ~/bin/issue_command
+out=$CONDA_PREFIX/bin
+c89 "-Wl,ac=1" "-Wc,langlvl(extc99),gonum,goff,hgpr" -o $out/issue_command issue_command.c
+extattr +a $out/issue_command
 
-~/bin/issue_command -debug 1 -search 1 -command 'D EMCS,F,ST=L,CN=BJT*'
+$out/issue_command -debug 1 -search 1 -command 'D EMCS,F,ST=L,CN=BJT*'
 setenv CONSOLE_NAME RMH00001
 setenv MAPPROCNAME BJTGTF
 issue_command -timeout 5 -search 0 -console_name $CONSOLE_NAME -command "S ${MAPPROCNAME}.GTFMAP"
@@ -714,21 +714,27 @@ struct mdb *retrieve_message(struct console *console, unsigned long long *comman
   if (debug) printf("MCSOPMSG R15=%08X, R0=%08X, R1=%08X, R2=%08X\n", mcsopmsg_pc.r15, mcsopmsg_pc.r0, mcsopmsg_pc.r1, mcsopmsg_pc.r2);
   if (mcsopmsg_pc.r15 <= 4) {
     struct get_ar_memory getmem;
-    unsigned short length = 0;
+    unsigned short length = 0xFFFF;
     getmem.source = (void *)mcsopmsg_pc.r1;
     getmem.source_ar = mcsopmsg_pc.r2;
     getmem.source_length = 2;
     getmem.dest = &length;
     getmem.dest_length = 2;
-    if (debug) printf("retrieving length\n"); fflush(stdout);
+    if (debug) printf("retrieving length: source=%08X, source_ar=%08X, source_len=%08X, dest=%08X, dest_len=%08X\n",
+		      getmem.source, getmem.source_ar, getmem.source_length, getmem.dest, getmem.dest_length); fflush(stdout);
     get_ar_memory(&getmem);
-    if (debug) printf("length=%d\n", length); fflush(stdout);
-    data = malloc(length);
-    getmem.source_length = length;
-    getmem.dest = data;
-    getmem.dest_length = length;
-    if (debug) printf("retrieving data\n"); fflush(stdout);
-    get_ar_memory(&getmem);
+    if (debug) printf("length=%04X\n", length); fflush(stdout);
+    if (length == 0xFFFF) {
+      data = NULL;
+    } else {
+      data = malloc(length);
+      getmem.source_length = length;
+      getmem.dest = data;
+      getmem.dest_length = length;
+      if (debug) printf("retrieving data: source=%08X, source_ar=%08X, source_len=%08X, dest=%08X, dest_len=%08X\n",
+			getmem.source, getmem.source_ar, getmem.source_length, getmem.dest, getmem.dest_length); fflush(stdout);
+      get_ar_memory(&getmem);
+    }
   }
   *rc_ptr = mcsopmsg_pc.r15;
   *reason_ptr = mcsopmsg_pc.r0;
@@ -895,12 +901,14 @@ static const unsigned short get_ar_memory_code[] = {
 #else
   0x90EC, 0xD00C, /* STM 14,12,12(13) */
   0x5870, 0x1000, /* L   R7,0(0,R1)   */
-  0x5820, 0x7000, /* L   R2,0(0,R7)  */
-  0x5830, 0x7008, /* L   R3,8(0,R7)  */
-  0x5840, 0x7004, /* L   R4,4(0,R7)  */
-  0x5850, 0x700C, /* L   R5,12(0,R7)  */
-  0x5860, 0x7010, /* L   R6,16(0,R7)  */
+  0x5820, 0x7000, /* L   R2,0(0,R7)   source        */
+  0x5830, 0x7008, /* L   R3,8(0,R7)   source length */
+  0x5840, 0x7004, /* L   R4,4(0,R7)   dest          */
+  0x5850, 0x700C, /* L   R5,12(0,R7)  dest length   */
+  0x5860, 0x7010, /* L   R6,16(0,R7)  source ar     */
 #endif
+  0x1700,         /* XR  R0,R0        */
+  0xB24E, 0x0040, /* SAR R4,R0        */
   0xB24E, 0x0026, /* SAR R2,R6        */
   0xA718, 0x003C, /* LHI R1,X'3C'     */   
   0x0A6B,         /* SVC X'6B'        */
